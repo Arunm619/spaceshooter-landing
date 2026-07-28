@@ -3,7 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Space Shooter — the arcade classic, rebuilt for Wear OS. Pilot your neon fighter from your wrist. Auto-fire. Three controls. No ads. No in-app purchases." />
+  <meta name="description" content="Space Shooter for Wear OS — neon arcade action on your wrist. Auto-fire, three controls, no ads, no in-app purchases. Install from Google Play." />
+  <meta name="theme-color" content="#05070d" />
+  <meta property="og:title" content="Space Shooter — Arcade Action on Wear OS" />
+  <meta property="og:description" content="Pilot a neon fighter from your wrist. Built for Wear OS. No ads. No in-app purchases." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://arunm619.github.io/spaceshooter-landing/" />
+  <meta name="twitter:card" content="summary_large_image" />
   <title>Space Shooter — Arcade Action on Wear OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -717,12 +723,131 @@
     /* —— Play badge SVG —— */
     .play-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
+
+    /* —— Proof pills (trust near CTA) —— */
+    .proof-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.1rem;
+      margin-top: 1.15rem;
+      animation: rise 0.7s 0.5s ease-out both;
+    }
+    @media (max-width: 880px) { .proof-row { justify-content: center; } }
+    .proof {
+      font-family: var(--font-display);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .proof::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 0.45rem;
+      border-radius: 1px;
+      background: var(--cyan);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
+      vertical-align: middle;
+    }
+
+    .audience {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cyan-dim);
+      margin-bottom: 0.85rem;
+      animation: rise 0.7s 0.08s ease-out both;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      left: 50%;
+      bottom: 1.5rem;
+      transform: translateX(-50%);
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.7;
+      animation: bounceHint 2.2s ease-in-out infinite;
+    }
+    .scroll-hint span { display: block; text-align: center; margin-top: 0.25rem; color: var(--cyan); }
+    @keyframes bounceHint {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(6px); }
+    }
+    @media (max-width: 880px) { .scroll-hint { display: none; } }
+
+    /* —— Problem / solution —— */
+    .problem {
+      padding: 4.5rem 0;
+    }
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1.5rem 2rem;
+      align-items: start;
+    }
+    @media (max-width: 760px) {
+      .problem-grid { grid-template-columns: 1fr; }
+      .problem-div { display: none; }
+    }
+    .problem-block h3 {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.55rem;
+    }
+    .problem-block.pain h3 { color: var(--red); }
+    .problem-block.gain h3 { color: var(--cyan); }
+    .problem-block p { color: var(--muted); max-width: 36ch; }
+    .problem-div {
+      width: 1px;
+      align-self: stretch;
+      background: linear-gradient(transparent, var(--cyan), transparent);
+      opacity: 0.45;
+    }
+
+    /* —— Reveal on scroll —— */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+
+    .final .risk {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.65rem 1.25rem;
+      margin-top: 1.35rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .final .risk strong { color: var(--cyan); font-weight: 600; }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
       }
+      .reveal { opacity: 1; transform: none; }
+      .scroll-hint { animation: none; }
     }
   </style>
 </head>
@@ -741,21 +866,25 @@
   </header>
 
   <main>
-    <!-- HERO -->
+    <!-- HERO: 5-second test — what / who / what next -->
     <section class="hero" style="border: none; padding-top: 2rem;">
       <div class="wrap hero-grid">
         <div class="hero-copy">
           <p class="brand">SPACE SHOOTER<span>DEFEND THE GALAXY</span></p>
+          <p class="audience">For Wear OS smartwatches</p>
           <h1>Arcade war on <em>your wrist</em></h1>
-          <p class="lede">Pilot a neon fighter, blast alien fleets into stardust, and chase your high score — built for Wear&nbsp;OS. Firing is automatic; your only job is to fly.</p>
+          <p class="lede">Neon dogfights, auto-fire, and a HI-SCORE that lives on your watch — not your phone.</p>
           <div class="cta-group">
             <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter" target="_blank" rel="noopener noreferrer">
               <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.8.9-1.3 1.6-.9l15.4 8.5c.7.4.7 1.4 0 1.8L4.6 21.4c-.7.4-1.6-.1-1.6-.9z"/></svg>
               Get it on Google Play
             </a>
-            <a class="btn btn-ghost" href="#how">See how it plays</a>
           </div>
-          <p class="cta-note" style="margin-top: 1rem;">Wear OS only · No ads · No in-app purchases</p>
+          <div class="proof-row" aria-label="Why players trust this">
+            <span class="proof">No ads</span>
+            <span class="proof">No in-app purchases</span>
+            <span class="proof">No data collected</span>
+          </div>
         </div>
 
         <div class="hero-visual" aria-hidden="true">
@@ -787,52 +916,66 @@
           </div>
         </div>
       </div>
+      <div class="scroll-hint" aria-hidden="true">Scroll<span>↓</span></div>
     </section>
 
-    <!-- TRUST -->
+    <!-- TRUST near first decision -->
     <div class="trust">
       <div class="wrap trust-row">
-        <div class="trust-item"><strong>Wear OS</strong> Built for the round screen</div>
-        <div class="trust-item"><strong>3 controls</strong> Crown · Touch · Tilt</div>
-        <div class="trust-item"><strong>No ads</strong> Zero in-app purchases</div>
-        <div class="trust-item"><strong>Private</strong> No data collected</div>
+        <div class="trust-item reveal"><strong>Wear OS only</strong> Round-screen native</div>
+        <div class="trust-item reveal reveal-delay-1"><strong>3 controls</strong> Crown · Touch · Tilt</div>
+        <div class="trust-item reveal reveal-delay-2"><strong>30 enemies</strong> Per shifting wave</div>
+        <div class="trust-item reveal reveal-delay-3"><strong>Local scores</strong> You vs. your best</div>
       </div>
     </div>
 
-    <!-- HOW / VALUE -->
+    <!-- PROBLEM / SOLUTION -->
+    <section class="problem" id="why" style="border-top: 1px solid var(--line);">
+      <div class="wrap">
+        <p class="section-label reveal">The gap</p>
+        <h2 class="reveal">Phone games don’t fit a watch.</h2>
+        <p class="section-lead reveal">Tiny screens need a different kind of arcade — one built for your wrist from the first pixel.</p>
+        <div class="problem-grid">
+          <div class="problem-block pain reveal">
+            <h3>The usual port</h3>
+            <p>Menus meant for phones. Touch targets that miss. Ads that eat the bezel. A game that feels like a shrink-wrapped afterthought.</p>
+          </div>
+          <div class="problem-div" aria-hidden="true"></div>
+          <div class="problem-block gain reveal reveal-delay-1">
+            <h3>Space Shooter</h3>
+            <p>Auto-fire so you only steer. Crown, touch, or tilt. Neon sprites authored for the round face. Zero ads. Zero paywalls.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BENEFITS -->
     <section id="how">
       <div class="wrap">
-        <p class="section-label">Why it hits different</p>
-        <h2>Golden-age arcade. Wrist-scale.</h2>
-        <p class="section-lead">Shooting is automatic. Your only job is to fly. Every wave hits faster — until the galaxy throws everything it has.</p>
+        <p class="section-label reveal">Why it hits</p>
+        <h2 class="reveal">Fly. Survive. Beat yourself.</h2>
+        <p class="section-lead reveal">Three things that make a two-minute break feel like a cabinet session.</p>
 
         <div class="feature-list">
-          <article class="feature">
+          <article class="feature reveal">
             <span class="feature-num">01</span>
             <div>
-              <h3>Endless waves, rising pressure</h3>
-              <p>Thirty ships per level in shifting formations — bowl, peak, diamond, hourglass, and more. Survive long enough and you’ll face dive-bombers, shooter elites, and boss commanders you can capture.</p>
+              <h3>Waves that escalate</h3>
+              <p>Thirty ships per level in bowl, peak, diamond, and hourglass formations. Dive-bombers, shooter elites, and bosses you can capture for a twin-ship save.</p>
             </div>
           </article>
-          <article class="feature">
+          <article class="feature reveal">
             <span class="feature-num">02</span>
             <div>
-              <h3>Controls that fit your watch</h3>
-              <p>Rotary crown for tactile precision, touch for any screen, or tilt to steer with your wrist. Sensitivity from 0.5× to 2.0× — dialed to you.</p>
+              <h3>Controls built for Wear</h3>
+              <p>Rotary crown for tactile precision, touch for any screen, or tilt to steer. Sensitivity from 0.5× to 2.0× — dialed in Settings.</p>
             </div>
           </article>
-          <article class="feature">
+          <article class="feature reveal">
             <span class="feature-num">03</span>
             <div>
-              <h3>Beat your own best</h3>
-              <p>Every run posts to the HI-SCORE board on the home screen. Beat your record and the end screen lights up. The rival is your previous run.</p>
-            </div>
-          </article>
-          <article class="feature">
-            <span class="feature-num">04</span>
-            <div>
-              <h3>Retro neon, CRT soul</h3>
-              <p>Hand-crafted sprites, Press Start typography, scanlines, and a tube-flash on every screen — cyan, marquee yellow, and arcade red on pure black.</p>
+              <h3>Your HI-SCORE is the rival</h3>
+              <p>Every run posts to the home screen board. Beat your record and the end screen lights up. No online leaderboard. Just you.</p>
             </div>
           </article>
         </div>
@@ -842,22 +985,22 @@
     <!-- CONTROLS -->
     <section id="controls">
       <div class="wrap">
-        <p class="section-label">Play your way</p>
-        <h2>Three ways to steer. Pick one.</h2>
-        <p class="section-lead">Choose during first-run setup — or change anytime in Settings.</p>
+        <p class="section-label reveal">Play your way</p>
+        <h2 class="reveal">Three ways to steer</h2>
+        <p class="section-lead reveal">Pick on first launch — or change anytime in Settings.</p>
 
         <div class="controls-grid">
-          <article class="control">
+          <article class="control reveal">
             <h3>Rotary Crown</h3>
-            <p>Twist the physical crown to slide left and right. Precise, tactile — the most satisfying play on a bezel watch.</p>
+            <p>Twist to slide left and right. Precise, tactile — best on a bezel watch.</p>
           </article>
-          <article class="control">
+          <article class="control reveal reveal-delay-1">
             <h3>Touch</h3>
-            <p>Press and hold the left or right half of the screen. Simple, intuitive, perfect for any Wear&nbsp;OS watch.</p>
+            <p>Hold the left or right half of the screen. Works on every Wear&nbsp;OS watch.</p>
           </article>
-          <article class="control">
+          <article class="control reveal reveal-delay-2">
             <h3>Motion / Tilt</h3>
-            <p>Tilt your wrist to pilot. Auto-calibrates to your neutral position at launch — no awkward arm angles.</p>
+            <p>Tilt your wrist to pilot. Calibrates to your neutral pose at launch.</p>
           </article>
         </div>
       </div>
@@ -866,45 +1009,45 @@
     <!-- ENEMIES -->
     <section id="enemies">
       <div class="wrap">
-        <p class="section-label">Know your enemy</p>
-        <h2>Everything the galaxy can throw</h2>
-        <p class="section-lead">From cannon fodder to commanders with a secret — stay sharp.</p>
+        <p class="section-label reveal">Know your enemy</p>
+        <h2 class="reveal">Four threats. Clear stakes.</h2>
+        <p class="section-lead reveal">Specific scores. Specific danger. No vague “aliens await.”</p>
 
         <div class="enemy-grid">
-          <article class="enemy-type">
+          <article class="enemy-type reveal">
             <div class="enemy-icon">
               <svg viewBox="0 0 24 24" fill="#ff00cc"><path d="M12 2L8 8H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z"/></svg>
             </div>
             <div>
               <h3>Basic Fighters · 10</h3>
-              <p>Magenta fodder that floods the formation and tests your reflexes.</p>
+              <p>Magenta fodder that floods the formation.</p>
             </div>
           </article>
-          <article class="enemy-type">
+          <article class="enemy-type reveal reveal-delay-1">
             <div class="enemy-icon">
               <svg viewBox="0 0 24 24" fill="#ffd500"><path d="M4 12 L12 4 L20 12 L12 14 Z M10 14 L12 22 L14 14 Z"/></svg>
             </div>
             <div>
               <h3>Fast Raiders · 20</h3>
-              <p>Yellow dive-bombers that close the gap and break formation fast.</p>
+              <p>Yellow dive-bombers that close the gap.</p>
             </div>
           </article>
-          <article class="enemy-type">
+          <article class="enemy-type reveal">
             <div class="enemy-icon">
               <svg viewBox="0 0 24 24" fill="#ff8c00"><path d="M6 8h4v4H6zm8 0h4v4h-4zM8 14h8v2H8zm2 4h4v2h-4z"/></svg>
             </div>
             <div>
               <h3>Shooter Elites · 50</h3>
-              <p>Orange gunships that dive and fire back at your fighter.</p>
+              <p>Orange gunships that dive and fire back.</p>
             </div>
           </article>
-          <article class="enemy-type">
+          <article class="enemy-type reveal reveal-delay-1">
             <div class="enemy-icon">
               <svg viewBox="0 0 24 24" fill="#ff3355"><path d="M12 2l2 6h6l-5 4 2 7-5-3-5 3 2-7-5-4h6l2-6z"/></svg>
             </div>
             <div>
               <h3>Boss Commanders · 100</h3>
-              <p>Capture a diving boss and a twin ship docks beside you — once — to take a hit in your place.</p>
+              <p>Capture a diving boss — a twin ship takes one hit for you.</p>
             </div>
           </article>
         </div>
@@ -914,10 +1057,10 @@
     <!-- CUSTOMIZE -->
     <section id="settings">
       <div class="wrap">
-        <p class="section-label">Fully tunable</p>
-        <h2>Dial it to your play style</h2>
-        <p class="section-lead">Difficulty, sound, haptics, and steering sensitivity — all from Settings on your watch.</p>
-        <div class="tune-row">
+        <p class="section-label reveal">Fully tunable</p>
+        <h2 class="reveal">Dial difficulty to your nerve</h2>
+        <p class="section-lead reveal">Lives, sound, rumble, and steering sensitivity — all on the watch.</p>
+        <div class="tune-row reveal">
           <span class="chip hot">Easy · 5 lives</span>
           <span class="chip hot">Normal · 3 lives</span>
           <span class="chip hot">Hard · 2 lives</span>
@@ -928,49 +1071,54 @@
       </div>
     </section>
 
-    <!-- FAQ -->
+    <!-- FAQ = objection handling -->
     <section id="faq">
       <div class="wrap">
-        <p class="section-label">FAQ</p>
-        <h2>Before you blast off</h2>
-        <div class="faq-list" style="margin-top: 2rem;">
+        <p class="section-label reveal">FAQ</p>
+        <h2 class="reveal">Objections, answered</h2>
+        <div class="faq-list reveal" style="margin-top: 2rem;">
           <details>
             <summary>Does this work on my phone?</summary>
-            <p>No — Space Shooter is built exclusively for Wear&nbsp;OS smartwatches. Install it from the Play Store on your watch (or via the Wear OS / Play Store companion flow on your phone).</p>
+            <p>No — Space Shooter is Wear&nbsp;OS only. Install from Play on your watch, or via the Wear OS / Play companion flow on your phone.</p>
           </details>
           <details>
             <summary>Are there ads or in-app purchases?</summary>
-            <p>No ads and no in-app purchases. What you see on Play is what you get.</p>
+            <p>No ads. No in-app purchases. What you see on Play is what you get.</p>
           </details>
           <details>
-            <summary>Which control method should I use?</summary>
-            <p>If your watch has a rotary crown or bezel, start there — most players find it the most precise. Touch works on every watch. Tilt is great when you want hands-free steering after a quick calibration.</p>
+            <summary>Which control should I start with?</summary>
+            <p>Rotary crown if you have one — most precise. Touch works everywhere. Tilt after a quick calibration when you want hands-free steer.</p>
           </details>
           <details>
             <summary>Does the game collect my data?</summary>
-            <p>No. The Play Store Data safety section lists no data collected and no data shared with third parties.</p>
+            <p>No. Play’s Data safety section lists no data collected and no data shared with third parties.</p>
           </details>
           <details>
-            <summary>Is there a high-score leaderboard online?</summary>
-            <p>Scores are local. Your all-time best lives on the watch — the rival is your previous run.</p>
+            <summary>Is there an online leaderboard?</summary>
+            <p>Scores stay on the watch. Your all-time best is the only rival that matters.</p>
           </details>
         </div>
       </div>
     </section>
 
-    <!-- FINAL CTA -->
+    <!-- FINAL CTA: single action + risk reversal -->
     <section class="final" id="download">
       <div class="wrap">
-        <p class="section-label">Ready?</p>
-        <h2>Defend the galaxy from your wrist</h2>
-        <p class="section-lead">Install Space Shooter on Wear&nbsp;OS. Blast off. Leave your mark on the HI-SCORE board.</p>
-        <div class="cta-group">
+        <p class="section-label reveal">Ready?</p>
+        <h2 class="reveal">Defend the galaxy from your wrist</h2>
+        <p class="section-lead reveal">One tap to Play. Install on Wear&nbsp;OS. Leave a mark on the HI-SCORE board.</p>
+        <div class="cta-group reveal">
           <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter" target="_blank" rel="noopener noreferrer">
             <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.8.9-1.3 1.6-.9l15.4 8.5c.7.4.7 1.4 0 1.8L4.6 21.4c-.7.4-1.6-.1-1.6-.9z"/></svg>
             Get it on Google Play
           </a>
         </div>
-        <p class="cta-note" style="margin-top: 1.25rem;">Everyone · Wear OS · Nebulae Apps</p>
+        <div class="risk reveal">
+          <span><strong>No ads</strong></span>
+          <span><strong>No IAP</strong></span>
+          <span><strong>No data collected</strong></span>
+          <span>Everyone · Wear OS</span>
+        </div>
       </div>
     </section>
   </main>
@@ -1001,6 +1149,25 @@
 
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce && "IntersectionObserver" in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("in");
+              io.unobserve(e.target);
+            }
+          });
+        },
+        { rootMargin: "0px 0px -8% 0px", threshold: 0.12 }
+      );
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    } else {
+      document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in"));
+    }
   </script>
+
 </body>
 </html>

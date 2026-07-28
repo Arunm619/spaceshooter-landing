@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Space Shooter — the arcade classic, rebuilt for Wear OS. Pilot your neon fighter from your wrist. Auto-fire. Three controls. No ads. No in-app purchases." />
+  <title>Space Shooter — Arcade Action on Wear OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Press+Start+2P&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #05070d;
+      --bg-elevated: #0a0f1a;
+      --cyan: #00e5ff;
+      --cyan-dim: #0a4a5a;
+      --yellow: #ffd500;
+      --red: #ff3355;
+      --magenta: #ff00cc;
+      --orange: #ff8c00;
+      --text: #e8f0ff;
+      --muted: #8b9bb8;
+      --line: rgba(0, 240, 255, 0.18);
+      --glow-cyan: 0 0 24px rgba(0, 240, 255, 0.45);
+      --font-brand: "Press Start 2P", monospace;
+      --font-display: Orbitron, sans-serif;
+      --font-body: "IBM Plex Sans", sans-serif;
+      --play-url: https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter;
+      --max: 1120px;
+      --radius: 4px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    img { max-width: 100%; display: block; }
+
+    .starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 80, 120, 0.35), transparent 55%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(120, 0, 60, 0.12), transparent 50%),
+        var(--bg);
+    }
+
+    .stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 30% 65%, #cff 50%, transparent 51%),
+        radial-gradient(1.5px 1.5px at 55% 15%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 70% 40%, #9ff 50%, transparent 51%),
+        radial-gradient(1px 1px at 85% 75%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 15% 85%, #cff 50%, transparent 51%),
+        radial-gradient(1.5px 1.5px at 45% 50%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 92% 25%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 5% 45%, #9ff 50%, transparent 51%),
+        radial-gradient(1px 1px at 60% 90%, #fff 50%, transparent 51%);
+      animation: drift 60s linear infinite;
+      opacity: 0.7;
+    }
+
+    @keyframes drift {
+      from { transform: translateY(0); }
+      to { transform: translateY(-200px); }
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.08) 2px,
+        rgba(0, 0, 0, 0.08) 4px
+      );
+      opacity: 0.35;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: min(100% - 2rem, var(--max));
+      margin-inline: auto;
+    }
+
+    /* —— Sticky bar —— */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(5, 7, 13, 0.72);
+      border-bottom: 1px solid var(--line);
+      transform: translateY(-100%);
+      transition: transform 0.35s ease;
+    }
+
+    .topbar.visible { transform: translateY(0); }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      width: min(100% - 2rem, var(--max));
+      margin-inline: auto;
+    }
+
+    .topbar-brand {
+      font-family: var(--font-brand);
+      font-size: 0.55rem;
+      color: var(--cyan);
+      letter-spacing: 0.02em;
+      line-height: 1.4;
+    }
+
+    .topbar .btn { padding: 0.55rem 1rem; font-size: 0.7rem; }
+
+    /* —— Buttons —— */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.9rem 1.5rem;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: #031018;
+      box-shadow: var(--glow-cyan);
+    }
+
+    .btn-primary:hover { box-shadow: 0 0 36px rgba(0, 240, 255, 0.65); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .cta-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* —— Hero —— */
+    .hero {
+      min-height: 100svh;
+      display: grid;
+      align-items: center;
+      padding: 3rem 0 4rem;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    @media (max-width: 880px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        text-align: center;
+      }
+      .cta-group { justify-content: center; }
+      .hero-copy { order: 1; }
+      .hero-visual { order: 0; }
+    }
+
+    .brand {
+      font-family: var(--font-brand);
+      font-size: clamp(0.7rem, 2.2vw, 1rem);
+      color: var(--cyan);
+      text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+      line-height: 1.55;
+      margin-bottom: 1.25rem;
+      animation: powerOn 0.8s ease-out both;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--yellow);
+      font-size: 0.72em;
+      margin-top: 0.4rem;
+      text-shadow: 0 0 16px rgba(255, 229, 102, 0.4);
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(1.85rem, 4.5vw, 3.1rem);
+      line-height: 1.12;
+      letter-spacing: 0.02em;
+      margin-bottom: 1rem;
+      animation: rise 0.7s 0.15s ease-out both;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--yellow);
+    }
+
+    .lede {
+      font-size: clamp(1.05rem, 2vw, 1.2rem);
+      color: var(--muted);
+      max-width: 36ch;
+      margin-bottom: 1.75rem;
+      animation: rise 0.7s 0.28s ease-out both;
+    }
+
+    @media (max-width: 880px) {
+      .lede { margin-inline: auto; }
+    }
+
+    .hero .cta-group { animation: rise 0.7s 0.4s ease-out both; }
+
+    @keyframes powerOn {
+      from { opacity: 0; filter: brightness(3); transform: scaleY(0.02); }
+      40% { opacity: 1; filter: brightness(1.4); transform: scaleY(1.05); }
+      to { opacity: 1; filter: brightness(1); transform: scaleY(1); }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* —— Watch visual —— */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      animation: floatIn 1s 0.2s ease-out both;
+    }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(30px) scale(0.94); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .watch {
+      position: relative;
+      width: min(300px, 78vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #1a2030, #0a0c12);
+      box-shadow:
+        0 0 0 10px #12161f,
+        0 0 0 14px #2a3142,
+        0 0 0 18px #0d1018,
+        0 30px 80px rgba(0, 0, 0, 0.7),
+        0 0 60px rgba(0, 240, 255, 0.15);
+      animation: watchPulse 4s ease-in-out infinite;
+    }
+
+    @keyframes watchPulse {
+      0%, 100% { box-shadow: 0 0 0 10px #12161f, 0 0 0 14px #2a3142, 0 0 0 18px #0d1018, 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,240,255,0.15); }
+      50% { box-shadow: 0 0 0 10px #12161f, 0 0 0 14px #2a3142, 0 0 0 18px #0d1018, 0 30px 80px rgba(0,0,0,0.7), 0 0 80px rgba(0,240,255,0.28); }
+    }
+
+    .watch-bezel {
+      position: absolute;
+      inset: 6%;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #000;
+      border: 2px solid rgba(0, 240, 255, 0.25);
+    }
+
+    .watch-screen {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% 100%, rgba(0, 60, 80, 0.5), transparent 55%),
+        #000;
+    }
+
+    .game-stars {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 20% 30%, #fff, transparent),
+        radial-gradient(1px 1px at 70% 20%, #8ff, transparent),
+        radial-gradient(1px 1px at 40% 70%, #fff, transparent),
+        radial-gradient(1px 1px at 80% 60%, #cff, transparent),
+        radial-gradient(1px 1px at 15% 80%, #fff, transparent),
+        radial-gradient(1px 1px at 55% 45%, #fff, transparent);
+      animation: starScroll 8s linear infinite;
+    }
+
+    @keyframes starScroll {
+      from { transform: translateY(0); }
+      to { transform: translateY(40%); }
+    }
+
+    .hud {
+      position: absolute;
+      top: 14%;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: var(--font-brand);
+      font-size: 0.42rem;
+      color: var(--yellow);
+      letter-spacing: 0.05em;
+      z-index: 2;
+    }
+
+    .hud small {
+      display: block;
+      color: var(--cyan);
+      margin-top: 0.35rem;
+      font-size: 0.85em;
+    }
+
+    .ship {
+      position: absolute;
+      bottom: 18%;
+      left: 50%;
+      width: 28px;
+      height: 28px;
+      margin-left: -14px;
+      z-index: 3;
+      animation: shipStrafe 3.2s ease-in-out infinite;
+    }
+
+    @keyframes shipStrafe {
+      0%, 100% { transform: translateX(-28px); }
+      50% { transform: translateX(28px); }
+    }
+
+    .ship svg { width: 100%; height: 100%; filter: drop-shadow(0 0 6px var(--cyan)); }
+
+    .enemy {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      z-index: 2;
+      animation: dive linear infinite;
+    }
+
+    .enemy svg { width: 100%; height: 100%; filter: drop-shadow(0 0 4px var(--red)); }
+
+    .enemy:nth-child(1) { left: 28%; top: -10%; animation-duration: 2.8s; animation-delay: 0s; }
+    .enemy:nth-child(2) { left: 55%; top: -10%; animation-duration: 2.2s; animation-delay: 0.7s; }
+    .enemy:nth-child(3) { left: 72%; top: -10%; animation-duration: 3.1s; animation-delay: 1.2s; }
+
+    @keyframes dive {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(280px) rotate(12deg); opacity: 0.3; }
+    }
+
+    .laser {
+      position: absolute;
+      width: 2px;
+      height: 14px;
+      background: var(--yellow);
+      box-shadow: 0 0 8px var(--yellow);
+      left: 50%;
+      bottom: 30%;
+      margin-left: -1px;
+      z-index: 2;
+      animation: shoot 0.7s linear infinite;
+    }
+
+    .laser:nth-of-type(2) { animation-delay: 0.35s; }
+
+    @keyframes shoot {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-120px); opacity: 0; }
+    }
+
+    .crown {
+      position: absolute;
+      right: -6px;
+      top: 42%;
+      width: 10px;
+      height: 36px;
+      background: linear-gradient(90deg, #3a4255, #6a7388);
+      border-radius: 0 4px 4px 0;
+      box-shadow: inset -2px 0 0 rgba(255,255,255,0.15);
+    }
+
+    /* —— Sections —— */
+    section {
+      padding: 5rem 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section-label {
+      font-family: var(--font-brand);
+      font-size: 0.5rem;
+      color: var(--cyan-dim);
+      letter-spacing: 0.08em;
+      margin-bottom: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(1.45rem, 3vw, 2rem);
+      letter-spacing: 0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-lead {
+      color: var(--muted);
+      max-width: 48ch;
+      margin-bottom: 2.5rem;
+      font-size: 1.05rem;
+    }
+
+    /* —— Trust strip —— */
+    .trust {
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .trust-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem 2.5rem;
+      text-align: center;
+    }
+
+    .trust-item {
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .trust-item strong {
+      display: block;
+      color: var(--cyan);
+      font-size: 1.05rem;
+      margin-bottom: 0.2rem;
+      font-weight: 700;
+    }
+
+    /* —— Features —— */
+    .feature-list {
+      display: grid;
+      gap: 0;
+    }
+
+    .feature {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1.25rem;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid var(--line);
+      align-items: start;
+    }
+
+    .feature:first-child { border-top: 1px solid var(--line); }
+
+    .feature-num {
+      font-family: var(--font-brand);
+      font-size: 0.55rem;
+      color: var(--yellow);
+      padding-top: 0.35rem;
+      min-width: 2rem;
+    }
+
+    .feature h3 {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+    }
+
+    .feature p { color: var(--muted); max-width: 58ch; }
+
+    /* —— Controls —— */
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 760px) {
+      .controls-grid { grid-template-columns: 1fr; }
+    }
+
+    .control {
+      padding: 1.5rem 0;
+      border-top: 2px solid var(--cyan);
+    }
+
+    .control h3 {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      color: var(--cyan);
+    }
+
+    .control p { color: var(--muted); font-size: 0.95rem; }
+
+    /* —— Enemies —— */
+    .enemy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem 2rem;
+    }
+
+    @media (max-width: 640px) {
+      .enemy-grid { grid-template-columns: 1fr; }
+    }
+
+    .enemy-type {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 1rem;
+      align-items: start;
+      padding: 1rem 0;
+    }
+
+    .enemy-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+    }
+
+    .enemy-icon svg {
+      width: 36px;
+      height: 36px;
+      filter: drop-shadow(0 0 6px var(--red));
+    }
+
+    .enemy-type h3 {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+    }
+
+    .enemy-type p { color: var(--muted); font-size: 0.92rem; }
+
+    /* —— Customize —— */
+    .tune-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+
+    .chip {
+      font-family: var(--font-display);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.45rem 0.75rem;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      border-radius: var(--radius);
+    }
+
+    .chip.hot {
+      border-color: rgba(255, 229, 102, 0.4);
+      color: var(--yellow);
+    }
+
+    /* —— FAQ —— */
+    .faq-list { max-width: 640px; }
+
+    details {
+      border-bottom: 1px solid var(--line);
+      padding: 1.1rem 0;
+    }
+
+    details:first-child { border-top: 1px solid var(--line); }
+
+    summary {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text);
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    summary::after {
+      content: "+";
+      font-family: var(--font-display);
+      color: var(--cyan);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    details[open] summary::after { content: "−"; }
+
+    details p {
+      color: var(--muted);
+      margin-top: 0.75rem;
+      padding-right: 2rem;
+      font-size: 0.98rem;
+    }
+
+    /* —— Final CTA —— */
+    .final {
+      text-align: center;
+      padding: 6rem 0;
+      position: relative;
+    }
+
+    .final::before {
+      content: "";
+      position: absolute;
+      inset: 20% 10%;
+      background: radial-gradient(ellipse at center, rgba(0, 240, 255, 0.08), transparent 70%);
+      pointer-events: none;
+    }
+
+    .final h2 { margin-bottom: 0.75rem; }
+
+    .final .section-lead {
+      margin-inline: auto;
+      margin-bottom: 2rem;
+    }
+
+    .final .cta-group { justify-content: center; }
+
+    /* —— Footer —— */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 2rem 0 3rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    footer a {
+      color: var(--cyan-dim);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    footer a:hover { color: var(--cyan); }
+
+    .footer-brand {
+      font-family: var(--font-brand);
+      font-size: 0.45rem;
+      color: var(--cyan);
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+
+    /* —— Play badge SVG —— */
+    .play-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="starfield" aria-hidden="true"><div class="stars"></div></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-brand">SPACE SHOOTER</div>
+      <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter" target="_blank" rel="noopener noreferrer">
+        <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.8.9-1.3 1.6-.9l15.4 8.5c.7.4.7 1.4 0 1.8L4.6 21.4c-.7.4-1.6-.1-1.6-.9z"/></svg>
+        Get on Play
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" style="border: none; padding-top: 2rem;">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="brand">SPACE SHOOTER<span>DEFEND THE GALAXY</span></p>
+          <h1>Arcade war on <em>your wrist</em></h1>
+          <p class="lede">Pilot a neon fighter, blast alien fleets into stardust, and chase your high score — built for Wear&nbsp;OS. Firing is automatic; your only job is to fly.</p>
+          <div class="cta-group">
+            <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter" target="_blank" rel="noopener noreferrer">
+              <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.8.9-1.3 1.6-.9l15.4 8.5c.7.4.7 1.4 0 1.8L4.6 21.4c-.7.4-1.6-.1-1.6-.9z"/></svg>
+              Get it on Google Play
+            </a>
+            <a class="btn btn-ghost" href="#how">See how it plays</a>
+          </div>
+          <p class="cta-note" style="margin-top: 1rem;">Wear OS only · No ads · No in-app purchases</p>
+        </div>
+
+        <div class="hero-visual" aria-hidden="true">
+          <div class="watch">
+            <div class="crown"></div>
+            <div class="watch-bezel">
+              <div class="watch-screen">
+                <div class="game-stars"></div>
+                <div class="hud">SCORE 12840<small>BEST 24100</small></div>
+                <div class="enemy">
+                  <svg viewBox="0 0 24 24" fill="#ff00cc"><path d="M12 2L8 8H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z"/></svg>
+                </div>
+                <div class="enemy">
+                  <svg viewBox="0 0 24 24" fill="#ff8c00"><path d="M12 3l3 5h5l-4 4 2 6-6-3-6 3 2-6-4-4h5l3-5z"/></svg>
+                </div>
+                <div class="enemy">
+                  <svg viewBox="0 0 24 24" fill="#ff3355"><path d="M12 2L8 8H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z"/></svg>
+                </div>
+                <div class="laser"></div>
+                <div class="laser" style="animation-delay:0.35s"></div>
+                <div class="ship">
+                  <svg viewBox="0 0 32 32" fill="#00e5ff">
+                    <path d="M16 2 L20 14 L28 18 L20 20 L16 30 L12 20 L4 18 L12 14 Z"/>
+                    <rect x="14" y="10" width="4" height="8" fill="#ffd500"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUST -->
+    <div class="trust">
+      <div class="wrap trust-row">
+        <div class="trust-item"><strong>Wear OS</strong> Built for the round screen</div>
+        <div class="trust-item"><strong>3 controls</strong> Crown · Touch · Tilt</div>
+        <div class="trust-item"><strong>No ads</strong> Zero in-app purchases</div>
+        <div class="trust-item"><strong>Private</strong> No data collected</div>
+      </div>
+    </div>
+
+    <!-- HOW / VALUE -->
+    <section id="how">
+      <div class="wrap">
+        <p class="section-label">Why it hits different</p>
+        <h2>Golden-age arcade. Wrist-scale.</h2>
+        <p class="section-lead">Shooting is automatic. Your only job is to fly. Every wave hits faster — until the galaxy throws everything it has.</p>
+
+        <div class="feature-list">
+          <article class="feature">
+            <span class="feature-num">01</span>
+            <div>
+              <h3>Endless waves, rising pressure</h3>
+              <p>Thirty ships per level in shifting formations — bowl, peak, diamond, hourglass, and more. Survive long enough and you’ll face dive-bombers, shooter elites, and boss commanders you can capture.</p>
+            </div>
+          </article>
+          <article class="feature">
+            <span class="feature-num">02</span>
+            <div>
+              <h3>Controls that fit your watch</h3>
+              <p>Rotary crown for tactile precision, touch for any screen, or tilt to steer with your wrist. Sensitivity from 0.5× to 2.0× — dialed to you.</p>
+            </div>
+          </article>
+          <article class="feature">
+            <span class="feature-num">03</span>
+            <div>
+              <h3>Beat your own best</h3>
+              <p>Every run posts to the HI-SCORE board on the home screen. Beat your record and the end screen lights up. The rival is your previous run.</p>
+            </div>
+          </article>
+          <article class="feature">
+            <span class="feature-num">04</span>
+            <div>
+              <h3>Retro neon, CRT soul</h3>
+              <p>Hand-crafted sprites, Press Start typography, scanlines, and a tube-flash on every screen — cyan, marquee yellow, and arcade red on pure black.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTROLS -->
+    <section id="controls">
+      <div class="wrap">
+        <p class="section-label">Play your way</p>
+        <h2>Three ways to steer. Pick one.</h2>
+        <p class="section-lead">Choose during first-run setup — or change anytime in Settings.</p>
+
+        <div class="controls-grid">
+          <article class="control">
+            <h3>Rotary Crown</h3>
+            <p>Twist the physical crown to slide left and right. Precise, tactile — the most satisfying play on a bezel watch.</p>
+          </article>
+          <article class="control">
+            <h3>Touch</h3>
+            <p>Press and hold the left or right half of the screen. Simple, intuitive, perfect for any Wear&nbsp;OS watch.</p>
+          </article>
+          <article class="control">
+            <h3>Motion / Tilt</h3>
+            <p>Tilt your wrist to pilot. Auto-calibrates to your neutral position at launch — no awkward arm angles.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENEMIES -->
+    <section id="enemies">
+      <div class="wrap">
+        <p class="section-label">Know your enemy</p>
+        <h2>Everything the galaxy can throw</h2>
+        <p class="section-lead">From cannon fodder to commanders with a secret — stay sharp.</p>
+
+        <div class="enemy-grid">
+          <article class="enemy-type">
+            <div class="enemy-icon">
+              <svg viewBox="0 0 24 24" fill="#ff00cc"><path d="M12 2L8 8H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z"/></svg>
+            </div>
+            <div>
+              <h3>Basic Fighters · 10</h3>
+              <p>Magenta fodder that floods the formation and tests your reflexes.</p>
+            </div>
+          </article>
+          <article class="enemy-type">
+            <div class="enemy-icon">
+              <svg viewBox="0 0 24 24" fill="#ffd500"><path d="M4 12 L12 4 L20 12 L12 14 Z M10 14 L12 22 L14 14 Z"/></svg>
+            </div>
+            <div>
+              <h3>Fast Raiders · 20</h3>
+              <p>Yellow dive-bombers that close the gap and break formation fast.</p>
+            </div>
+          </article>
+          <article class="enemy-type">
+            <div class="enemy-icon">
+              <svg viewBox="0 0 24 24" fill="#ff8c00"><path d="M6 8h4v4H6zm8 0h4v4h-4zM8 14h8v2H8zm2 4h4v2h-4z"/></svg>
+            </div>
+            <div>
+              <h3>Shooter Elites · 50</h3>
+              <p>Orange gunships that dive and fire back at your fighter.</p>
+            </div>
+          </article>
+          <article class="enemy-type">
+            <div class="enemy-icon">
+              <svg viewBox="0 0 24 24" fill="#ff3355"><path d="M12 2l2 6h6l-5 4 2 7-5-3-5 3 2-7-5-4h6l2-6z"/></svg>
+            </div>
+            <div>
+              <h3>Boss Commanders · 100</h3>
+              <p>Capture a diving boss and a twin ship docks beside you — once — to take a hit in your place.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUSTOMIZE -->
+    <section id="settings">
+      <div class="wrap">
+        <p class="section-label">Fully tunable</p>
+        <h2>Dial it to your play style</h2>
+        <p class="section-lead">Difficulty, sound, haptics, and steering sensitivity — all from Settings on your watch.</p>
+        <div class="tune-row">
+          <span class="chip hot">Easy · 5 lives</span>
+          <span class="chip hot">Normal · 3 lives</span>
+          <span class="chip hot">Hard · 2 lives</span>
+          <span class="chip">Sound on/off</span>
+          <span class="chip">Rumble on/off</span>
+          <span class="chip">Sense 0.5×–2.0×</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="wrap">
+        <p class="section-label">FAQ</p>
+        <h2>Before you blast off</h2>
+        <div class="faq-list" style="margin-top: 2rem;">
+          <details>
+            <summary>Does this work on my phone?</summary>
+            <p>No — Space Shooter is built exclusively for Wear&nbsp;OS smartwatches. Install it from the Play Store on your watch (or via the Wear OS / Play Store companion flow on your phone).</p>
+          </details>
+          <details>
+            <summary>Are there ads or in-app purchases?</summary>
+            <p>No ads and no in-app purchases. What you see on Play is what you get.</p>
+          </details>
+          <details>
+            <summary>Which control method should I use?</summary>
+            <p>If your watch has a rotary crown or bezel, start there — most players find it the most precise. Touch works on every watch. Tilt is great when you want hands-free steering after a quick calibration.</p>
+          </details>
+          <details>
+            <summary>Does the game collect my data?</summary>
+            <p>No. The Play Store Data safety section lists no data collected and no data shared with third parties.</p>
+          </details>
+          <details>
+            <summary>Is there a high-score leaderboard online?</summary>
+            <p>Scores are local. Your all-time best lives on the watch — the rival is your previous run.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final" id="download">
+      <div class="wrap">
+        <p class="section-label">Ready?</p>
+        <h2>Defend the galaxy from your wrist</h2>
+        <p class="section-lead">Install Space Shooter on Wear&nbsp;OS. Blast off. Leave your mark on the HI-SCORE board.</p>
+        <div class="cta-group">
+          <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter" target="_blank" rel="noopener noreferrer">
+            <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 20.5v-17c0-.8.9-1.3 1.6-.9l15.4 8.5c.7.4.7 1.4 0 1.8L4.6 21.4c-.7.4-1.6-.1-1.6-.9z"/></svg>
+            Get it on Google Play
+          </a>
+        </div>
+        <p class="cta-note" style="margin-top: 1.25rem;">Everyone · Wear OS · Nebulae Apps</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p class="footer-brand">SPACE SHOOTER</p>
+      <p>
+        By
+        <a href="mailto:arunmsudharsan@gmail.com">Nebulae Apps</a>
+        ·
+        <a href="https://play.google.com/store/apps/details?id=dev.nebulae.spaceshooter" target="_blank" rel="noopener noreferrer">Google Play</a>
+      </p>
+      <p style="margin-top: 0.5rem;">© <span id="year"></span> Arun Sudharsan Madhavaraman</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const topbar = document.getElementById("topbar");
+    const hero = document.querySelector(".hero");
+
+    const onScroll = () => {
+      const past = window.scrollY > (hero ? hero.offsetHeight * 0.55 : 320);
+      topbar.classList.toggle("visible", past);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  </script>
+</body>
+</html>
